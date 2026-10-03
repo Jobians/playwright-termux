@@ -1,39 +1,30 @@
 # playwright-termux
 
-Run Playwright on Termux (Android) using system-installed Chromium — no browser downloads required.
+Run Playwright on Termux (Android) using a system-installed Chromium browser — no Playwright browser downloads required.
 
----
+## Why
 
-## 🚀 Why?
+The official `playwright` package bundles browser binaries. In contrast, **`playwright-core` does not include browser downloads**. A common issue on Termux/Android is that Playwright's default browser path handling can trigger an Android platform check (e.g. `Error: Unsupported platform: android`) when trying to locate or download browsers. 
 
-Playwright’s official packages include browser binaries by default, but **`playwright-core` does NOT**.
+This setup solves that by:
 
-This means:
+- Setting `PLAYWRIGHT_BROWSERS_PATH=0` to disable Playwright's default browser cache/path logic, preventing the Android platform check that fails in this scenario.
+- Using `playwright-core` with a system-installed Chromium from the Termux X11 repository.
+- Pointing Playwright to that Chromium via `executablePath` (`CHROMIUM_PATH`).
 
-- You must install a compatible Chromium yourself (via Termux)
-- You must tell Playwright where that Chromium lives (`executablePath`)
-- You must disable Playwright’s automatic browser downloads (`PLAYWRIGHT_BROWSERS_PATH=0`)
+## Requirements
 
-This setup uses `playwright-core` **to avoid browser downloads and keep your install lightweight**, while running Playwright on Termux.
+- Termux X11 repository enabled
+- Chromium installed from the Termux X11 repository
 
----
+## Setup
 
-## 📦 Requirements
-
-- Termux (Android)  
-- Node.js 18+  
-- Chromium installed from Termux’s X11 repo  
-- `.env` file with `CHROMIUM_PATH` and `PLAYWRIGHT_BROWSERS_PATH` set
-
----
-
-## ⚙️ Setup
-
-### 1. Enable X11 repo
+### 1. Enable the X11 repository and update package lists
 
 ```bash
 pkg install x11-repo
-````
+pkg update
+```
 
 ### 2. Install Chromium
 
@@ -41,33 +32,28 @@ pkg install x11-repo
 pkg install chromium
 ```
 
-### 3. Clone repo and install dependencies
+### 3. Configure `.env`
 
-```bash
-git clone https://github.com/jobians/playwright-termux.git
-cd playwright-termux
-npm install
-# or pnpm install
-```
-
-### 4. Create `.env` file in the project root
+Create a `.env` file in the project root with the following:
 
 ```env
 PLAYWRIGHT_BROWSERS_PATH=0
 CHROMIUM_PATH=/data/data/com.termux/files/usr/bin/chromium-browser
 ```
 
-*(Verify the path with `which chromium-browser` if needed)*
+`PLAYWRIGHT_BROWSERS_PATH=0` is required for this Termux setup. 
 
-### 5. Run the example
+Find your Chromium path:
 
 ```bash
-npm start
+which chromium-browser 2>/dev/null || which chromium
 ```
 
----
+Set `CHROMIUM_PATH` to the path returned by the command. If the binary is different, update it accordingly.
 
-## 🔑 Critical code snippet
+### 4. `executablePath`
+
+Playwright launches the system-installed Chromium using the path from `.env`:
 
 ```js
 const browser = await chromium.launch({
@@ -77,20 +63,36 @@ const browser = await chromium.launch({
 });
 ```
 
-This tells `playwright-core` to use your installed Chromium instead of downloading one.
+## Example
 
----
+### 1. Clone this example repo
 
-## 📁 Example code
+```bash
+git clone https://github.com/jobians/playwright-termux.git
+cd playwright-termux
+```
 
-Full script in [`index.js`](./index.js).
+### 2. Install dependencies
 
----
+```bash
+npm install
+```
 
-## 🤝 Contributions
+### 3. Run `npm start`
 
-PRs and issues welcome!
+```bash
+npm start
+```
 
----
+You should see the GitHub Playwright page title printed to the console. See [`index.js`](./index.js) for the full script.
 
-Happy scraping on Termux! 🐧🚀
+## Notes
+
+- If you're running in an environment without a display server, use headless mode as shown. Termux with X11 is only needed if you want to run headed.
+- Always verify the binary path after installing Chromium—package names/paths can differ across Termux versions.
+
+## Contributions
+
+PRs and issues are welcome!
+
+<center>Happy scraping on Termux! 🐧🚀</center>
