@@ -11,7 +11,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.11.1",
   "dependencies": {
-    "dotenv": "^17.2.1",
-    "playwright-core": "^1.54.1"
+    "dotenv": "^18.0.5",
+    "playwright-core": "^1.63.0"
   }
 }
